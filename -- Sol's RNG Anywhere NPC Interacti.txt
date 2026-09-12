@@ -1,41 +1,29 @@
--- Sol's RNG NPC Remote Interaction Helper Script
+Lua
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local player = Players.LocalPlayer
+local localPlayer = Players.LocalPlayer
 
--- Target NPC name (e.g., Mari, Jester, etc.)
-local targetNpcName = "Mari" -- Change to the desired NPC name
+-- 작업하려는 NPC의 ProximityPrompt 이름 또는 부모 파트 이름을 지정하세요
+local targetNPCName = "Jake" -- 예시: 제이크 NPC
 
-local function interactWithNPC()
-    local character = player.Character
-    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+-- Workspace에서 해당 NPC의 ProximityPrompt를 찾는 함수
+local function triggerNPCInteraction()
+    local workspace = game:GetService("Workspace")
     
-    -- Find the NPC spawned in the workspace
-    local npc = Workspace:FindFirstChild(targetNpcName)
-    
-    if npc and npc:FindFirstChild("HumanoidRootPart") then
-        local originalCFrame = character.HumanoidRootPart.CFrame
-        
-        -- 1. Teleport to the NPC's location
-        character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-        
-        task.wait(0.1)
-        
-        -- 2. Force trigger the ProximityPrompt if available
-        for _, descendant in ipairs(npc:GetDescendants()) do
-            if descendant:IsA("ProximityPrompt") then
-                fireproximityprompt(descendant)
-            end
+    -- Workspace를 순회하며 해당 이름을 가진 ProximityPrompt 찾기
+    for _, descendant in ipairs(workspace:GetDescendants()) do
+        if descendant:IsA("ProximityPrompt") and (descendant.Parent.Name == targetNPCName or descendant.Name == targetNPCName) then
+            -- 거리에 상관없이 즉시 상호작용 트리거
+            descendant:InputHoldBegin()
+            task.wait(descendant.HoldDuration or 0.1)
+            descendant:InputHoldEnd()
+            print(targetNPCName .. " NPC와 원격 상호작용을 시도했습니다.")
+            return true
         end
-        
-        task.wait(0.2)
-        
-        -- 3. Return to the original position (Optional)
-        character.HumanoidRootPart.CFrame = originalCFrame
-        print("Attempted interaction with " .. targetNpcName .. ".")
-    else
-        warn(targetNpcName .. " NPC is not currently spawned.")
     end
+    
+    warn("해당 NPC의 ProximityPrompt를 찾지 못했습니다.")
+    return false
 end
 
-interactWithNPC()
+-- 실행 예시 (필요에 따라 콘솔이나 특정 키 바인딩으로 실행)
+triggerNPCInteraction()
