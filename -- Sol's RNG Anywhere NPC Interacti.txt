@@ -1,29 +1,28 @@
-Lua
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
 
--- 작업하려는 NPC의 ProximityPrompt 이름 또는 부모 파트 이름을 지정하세요
-local targetNPCName = "Jake" -- 예시: 제이크 NPC
-
--- Workspace에서 해당 NPC의 ProximityPrompt를 찾는 함수
-local function triggerNPCInteraction()
-    local workspace = game:GetService("Workspace")
+local function triggerNpcInteraction(npcName)
+    local targetRemote = ReplicatedStorage:FindFirstChild(npcName, true)
     
-    -- Workspace를 순회하며 해당 이름을 가진 ProximityPrompt 찾기
-    for _, descendant in ipairs(workspace:GetDescendants()) do
-        if descendant:IsA("ProximityPrompt") and (descendant.Parent.Name == targetNPCName or descendant.Name == targetNPCName) then
-            -- 거리에 상관없이 즉시 상호작용 트리거
-            descendant:InputHoldBegin()
-            task.wait(descendant.HoldDuration or 0.1)
-            descendant:InputHoldEnd()
-            print(targetNPCName .. " NPC와 원격 상호작용을 시도했습니다.")
-            return true
+    if targetRemote and targetRemote:IsA("RemoteEvent") then
+        targetRemote:FireServer()
+        print("Successfully sent remote interaction request to: " .. npcName)
+    else
+        local npcModel = workspace:FindFirstChild(npcName, true)
+        if npcModel then
+            local prompt = npcModel:FindFirstChildOfClass("ProximityPrompt")
+            if prompt then
+                fireproximityprompt(prompt)
+                print("Successfully forced proximity prompt for: " .. npcName)
+            else
+                print("ProximityPrompt not found for this NPC.")
+            end
+        else
+            print("Target not found: " .. npcName)
         end
     end
-    
-    warn("해당 NPC의 ProximityPrompt를 찾지 못했습니다.")
-    return false
 end
 
--- 실행 예시 (필요에 따라 콘솔이나 특정 키 바인딩으로 실행)
-triggerNPCInteraction()
+-- Example usage:
+-- triggerNpcInteraction("Jester")
