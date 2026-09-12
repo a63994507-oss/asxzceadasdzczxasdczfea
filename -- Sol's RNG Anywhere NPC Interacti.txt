@@ -1,28 +1,51 @@
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
 
-local function triggerNpcInteraction(npcName)
-    local targetRemote = ReplicatedStorage:FindFirstChild(npcName, true)
+local player = Players.LocalPlayer
+local targetNpcName = "NPC_NAME_HERE" -- Replace with the actual NPC name
+
+local function teleportAndInteract()
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
     
-    if targetRemote and targetRemote:IsA("RemoteEvent") then
-        targetRemote:FireServer()
-        print("Successfully sent remote interaction request to: " .. npcName)
-    else
-        local npcModel = workspace:FindFirstChild(npcName, true)
-        if npcModel then
-            local prompt = npcModel:FindFirstChildOfClass("ProximityPrompt")
+    local rootPart = character.HumanoidRootPart
+    local originalCFrame = rootPart.CFrame -- Save current position
+    
+    local npc = Workspace:FindFirstChild(targetNpcName, true)
+    
+    if npc then
+        local targetPart = npc:IsA("Model") and (npc.PrimaryPart or npc:FindFirstChild("HumanoidRootPart")) or npc:FindFirstChildWhichIsA("BasePart")
+        
+        if targetPart then
+            -- 1. Teleport to the NPC's location
+            rootPart.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.1) -- Wait for server synchronization
+            
+            -- 2. Trigger the ProximityPrompt
+            local prompt = npc:FindFirstChildWhichIsA("ProximityPrompt", true)
             if prompt then
                 fireproximityprompt(prompt)
-                print("Successfully forced proximity prompt for: " .. npcName)
+                print("Successfully triggered NPC interaction.")
             else
-                print("ProximityPrompt not found for this NPC.")
+                warn("No ProximityPrompt found inside the NPC.")
             end
+            
+            task.wait(0.1)
+            
+            -- 3. Return to the original position
+            rootPart.CFrame = originalCFrame
         else
-            print("Target not found: " .. npcName)
+            warn("Could not find a valid base part for the NPC.")
         end
+    else
+        warn("The target NPC is currently not spawned in the world.")
     end
 end
 
--- Example usage:
--- triggerNpcInteraction("Jester")
+-- Press 'F' key to execute
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.F then
+        teleportAndInteract()
+    end
+end)
