@@ -1,41 +1,41 @@
--- Sol's RNG NPC Remote Interaction / Teleport Cheat Script
+-- Sol's RNG NPC Remote Interaction Helper Script
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 
--- Target NPC Name (e.g., Jester, Mari, Merchant, etc.)
-local targetNpcName = "Jester"
+-- Target NPC name (e.g., Mari, Jester, etc.)
+local targetNpcName = "Mari" -- Change to the desired NPC name
 
-local function forceInteractNpc()
+local function interactWithNPC()
     local character = player.Character
     if not character or not character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = character.HumanoidRootPart
-
-    -- Find NPC inside Workspace
+    
+    -- Find the NPC spawned in the workspace
     local npc = Workspace:FindFirstChild(targetNpcName)
     
     if npc and npc:FindFirstChild("HumanoidRootPart") then
-        -- Method 1: Teleport player to the NPC to interact directly
-        local oldPos = hrp.CFrame
-        hrp.CFrame = npc.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        local originalCFrame = character.HumanoidRootPart.CFrame
+        
+        -- 1. Teleport to the NPC's location
+        character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
         
         task.wait(0.1)
         
-        -- Force trigger ProximityPrompt
-        local prompt = npc:FindFirstChildWhichIsA("ProximityPrompt", true)
-        if prompt then
-            prompt.MaxActivationDistance = math.huge
-            fireproximityprompt(prompt)
-            print("NPC interaction forced successfully!")
+        -- 2. Force trigger the ProximityPrompt if available
+        for _, descendant in ipairs(npc:GetDescendants()) do
+            if descendant:IsA("ProximityPrompt") then
+                fireproximityprompt(descendant)
+            end
         end
         
-        task.wait(0.1)
-        -- Return to original position (optional)
-        hrp.CFrame = oldPos
+        task.wait(0.2)
+        
+        -- 3. Return to the original position (Optional)
+        character.HumanoidRootPart.CFrame = originalCFrame
+        print("Attempted interaction with " .. targetNpcName .. ".")
     else
-        warn("The target NPC is currently not spawned or does not exist in the server.")
+        warn(targetNpcName .. " NPC is not currently spawned.")
     end
 end
 
--- Execute script
-forceInteractNpc()
+interactWithNPC()
