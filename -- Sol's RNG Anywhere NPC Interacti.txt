@@ -1,0 +1,100 @@
+-- Sol's RNG Anywhere NPC Interaction Cheat GUI
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+-- GUI Creation
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local NpcBox = Instance.new("TextBox")
+local TpButton = Instance.new("TextButton")
+local InteractButton = Instance.new("TextButton")
+
+ScreenGui.Name = "SolsNpcInteractGui"
+ScreenGui.Parent = game.CoreGui
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 160)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "Sol's RNG NPC Interactor"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+
+NpcBox.Name = "Eden"
+NpcBox.Parent = MainFrame
+NpcBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+NpcBox.Position = UDim2.new(0.1, 0, 0.25, 0)
+NpcBox.Size = UDim2.new(0.8, 0, 0, 30)
+NpcBox.Font = Enum.Font.SourceSans
+NpcBox.PlaceholderText = "Enter NPC Name (e.g., Jester)"
+NpcBox.Text = "Eden"
+NpcBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+NpcBox.TextSize = 14
+
+TpButton.Name = "TpButton"
+TpButton.Parent = MainFrame
+TpButton.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+TpButton.Position = UDim2.new(0.1, 0, 0.5, 0)
+TpButton.Size = UDim2.new(0.8, 0, 0, 30)
+TpButton.Font = Enum.Font.SourceSansBold
+TpButton.Text = "Teleport to NPC"
+TpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TpButton.TextSize = 14
+
+InteractButton.Name = "InteractButton"
+InteractButton.Parent = MainFrame
+InteractButton.BackgroundColor3 = Color3.fromRGB(0, 160, 80)
+InteractButton.Position = UDim2.new(0.1, 0, 0.75, 0)
+InteractButton.Size = UDim2.new(0.8, 0, 0, 30)
+InteractButton.Font = Enum.Font.SourceSansBold
+InteractButton.Text = "Force Prompt"
+InteractButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+InteractButton.TextSize = 14
+
+-- Find NPC Function
+local function findTargetNpc()
+    local name = NpcBox.Text
+    if name == "" then return nil end
+    return Workspace:FindFirstChild(name, true)
+end
+
+-- Teleport to NPC Function
+TpButton.MouseButton1Click:Connect(function()
+    local npc = findTargetNpc()
+    local char = player.Character
+    if npc and char and char:FindFirstChild("HumanoidRootPart") then
+        local targetPart = npc:FindFirstChild("PrimaryPart") or npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChildWhichIsA("BasePart")
+        if targetPart then
+            char.HumanoidRootPart.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    end
+end)
+
+-- Force Remote Prompt Interaction Function
+InteractButton.MouseButton1Click:Connect(function()
+    local npc = findTargetNpc()
+    if npc then
+        local prompt = npc:FindFirstChildWhichIsA("ProximityPrompt", true)
+        if prompt then
+            prompt.MaxActivationDistance = 999999
+            prompt.RequiresLineOfSight = false
+            if fireproximityprompt then
+                fireproximityprompt(prompt)
+            else
+                prompt:InputHoldBegin()
+                task.wait(0.1)
+                prompt:InputHoldEnd()
+            end
+        end
+    end
+end)
